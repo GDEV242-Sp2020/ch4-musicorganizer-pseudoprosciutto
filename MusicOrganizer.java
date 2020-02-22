@@ -247,6 +247,7 @@ public class MusicOrganizer
     public void cloneAndShuffle(){
         shuffledTracks = (ArrayList)tracks.clone();
         Collections.shuffle(shuffledTracks);
+        shufflePosition = 0; //reset place on shuffle list
     } 
     
     /** 
@@ -270,15 +271,11 @@ public class MusicOrganizer
     public void playFromShuffleList(){
         player.stop();
         if(shufflePosition == shuffledTracks.size()){ 
-            //start over shufflePos to 0 and list new order of shuffle.
-                shufflePosition = 0;
-                cloneAndShuffle();
-                System.out.println("Resetting shuffle because playlist ended");
-                System.out.println("New playlist order:");
-                listAllShuffledTracks();
+            //List is exhausted
+                System.out.println("Shuffled playlist ended use method cloneAndShuffle to start again");
             }
             
-        if(shuffledTracks.size() > 0) 
+        if(shuffledTracks.size() > 0 && shufflePosition < shuffledTracks.size()) 
         { // if list size is valid
             player.startPlaying(shuffledTracks.get(shufflePosition).getFilename());
             System.out.println("Now playing: " + shuffledTracks.get(shufflePosition).getArtist() + " - " + shuffledTracks.get(shufflePosition).getTitle());
