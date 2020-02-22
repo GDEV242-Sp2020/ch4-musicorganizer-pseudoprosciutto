@@ -18,6 +18,7 @@ public class MusicPlayer
 {
     // The current player. It might be null.
     private AdvancedPlayer player;
+    public boolean isPlaying = false;
     
     /**
      * Constructor for objects of class MusicFilePlayer
@@ -37,6 +38,7 @@ public class MusicPlayer
         try {
             setupPlayer(filename);
             player.play(500);
+            isPlaying = true;
         }
         catch(JavaLayerException e) {
             reportProblem(filename);
@@ -60,6 +62,7 @@ public class MusicPlayer
                 {
                     try {
                         player.play(5000);
+                        isPlaying = true;
                     }
                     catch(JavaLayerException e) {
                         reportProblem(filename);
@@ -79,6 +82,7 @@ public class MusicPlayer
     public void stop()
     {
         killPlayer();
+        isPlaying = false;
     }
     
     /**
