@@ -1,20 +1,33 @@
 import java.util.ArrayList;
+import java.util.Collections; //imported to use shuffle method in colletions
+import java.util.Random; //random number class used for shuffle
 
 /**
  * A class to hold details of audio tracks.
- * Individual tracks may be played.
+ * Individual tracks may be played. 
  * 
- * @author David J. Barnes and Michael Kölling
- * @version 2016.02.29
+ * A new playRandomTrack() method has been added.
+ * 
+ * @author Matthew Sheehan
+ * @version 2020.02.22
  */
 public class MusicOrganizer
 {
     // An ArrayList for storing music tracks.
     private ArrayList<Track> tracks;
+    private ArrayList<Track> shuffledTracks;
     // A player for the music tracks.
     private MusicPlayer player;
     // A reader that can read music files and load them as tracks.
     private TrackReader reader;
+    // A random number generator for shuffle function
+    private Random rng;
+    //marker for last played track so shuffle doesnt repeat same song
+    private int lastPlayedTrack;
+    //marker for position on shuffled play list
+    private int shufflePosition = 0;
+    
+    
 
     /**
      * Create a MusicOrganizer
@@ -24,10 +37,16 @@ public class MusicOrganizer
         tracks = new ArrayList<>();
         player = new MusicPlayer();
         reader = new TrackReader();
+        shuffledTracks = new ArrayList<>();
+        
         readLibrary("../audio");
+        //clones tracks<> to shuffledTracks<> and shuffles
+        cloneAndShuffle();
+        
         System.out.println("Music library loaded. " + getNumberOfTracks() + " tracks.");
         System.out.println();
     }
+   
     
     /**
      * Add a track file to the collection.
@@ -36,6 +55,9 @@ public class MusicOrganizer
     public void addFile(String filename)
     {
         tracks.add(new Track(filename));
+        //update Shuffle list and reshuffle so new tracks 
+        //   arent just tacked on at end.
+        cloneAndShuffle();
     }
     
     /**
@@ -45,6 +67,9 @@ public class MusicOrganizer
     public void addTrack(Track track)
     {
         tracks.add(track);
+        //update Shuffle list and reshuffle so new tracks 
+        //   arent just tacked on at end.
+        cloneAndShuffle();        
     }
     
     /**
@@ -57,8 +82,9 @@ public class MusicOrganizer
             Track track = tracks.get(index);
             player.startPlaying(track.getFilename());
             System.out.println("Now playing: " + track.getArtist() + " - " + track.getTitle());
+            lastPlayedTrack = index;
         }
-    }
+     }
     
     /**
      * Return the number of tracks in the collection.
@@ -93,6 +119,7 @@ public class MusicOrganizer
         System.out.println();
     }
     
+
     /**
      * List all tracks by the given artist.
      * @param artist The artist's name.
@@ -114,6 +141,8 @@ public class MusicOrganizer
     {
         if(indexValid(index)) {
             tracks.remove(index);
+        //update Shuffle list and reshuffle.
+            cloneAndShuffle();
         }
     }
     
@@ -124,6 +153,7 @@ public class MusicOrganizer
     {
         if(tracks.size() > 0) {
             player.startPlaying(tracks.get(0).getFilename());
+            lastPlayedTrack = 0;
         }
     }
     
@@ -169,5 +199,91 @@ public class MusicOrganizer
         for(Track track : tempTracks) {
             addTrack(track);
         }
+
     }
+    
+    /**
+     *4.43
+     */
+    
+    /**
+     *This method plays one random track if there is more than 2 tracks
+     */
+    public void playOneRandomTrack()
+    {   
+        player.stop();
+        Random rng = new Random();
+        int random = rng.nextInt(tracks.size());
+
+            if(tracks.size()<2)
+            { //if there's not enough tracks to randomize, do nothing.
+                System.out.println("Not enough tracks to play a random track.");        
+            }else if(random != lastPlayedTrack 
+                && tracks.size()>1) //the && clause here should be redundant
+                {//if wasn't played last and there are more than one track
+                    player.startPlaying(tracks.get(random).getFilename());
+                    System.out.println(tracks.get(random).getDetails());
+                    lastPlayedTrack = random;
+                
+            }else{    // the track last played = the random number.
+                while(random == lastPlayedTrack)
+                    { //shuffle until unique
+                        random = rng.nextInt(getNumberOfTracks());
+                            if(random!= lastPlayedTrack) break;
+                    }
+                    player.startPlaying(tracks.get(random).getFilename());
+                    System.out.println(tracks.get(random).getDetails());
+                    lastPlayedTrack = random;
+            }
+     }
+    
+    /**
+     * 4.45
+     **/
+    /**
+     * clone tracks a dedicated shuffle arrray to reshuffle songs
+     * used to update when added new songs.
+     */
+    public void cloneAndShuffle(){
+        shuffledTracks = (ArrayList)tracks.clone();
+        Collections.shuffle(shuffledTracks);
+    } 
+    
+    /** 
+     * Show a list of all the shuffled tracks as they are currently ordered.
+     * adding/Removing new tracks will reshuffle
+     */
+    public void listAllShuffledTracks()
+    {
+        System.out.println("Track listing: ");
+
+        for(Track track : shuffledTracks) {
+            System.out.println(track.getDetails());
+        }
+        System.out.println();
+    }
+    
+    /**
+     * This method plays from the shuffled list order one at a time.
+     * I use collections.shuffle() method since I am playing one song once.
+     */
+    public void playFromShuffleList(){
+        player.stop();
+        if(shufflePosition == shuffledTracks.size()){ 
+            //start over shufflePos to 0 and list new order of shuffle.
+                shufflePosition = 0;
+                cloneAndShuffle();
+                System.out.println("Resetting shuffle because playlist ended");
+                System.out.println("New playlist order:");
+                listAllShuffledTracks();
+            }
+            
+        if(shuffledTracks.size() > 0) 
+        { // if list size is valid
+            player.startPlaying(shuffledTracks.get(shufflePosition).getFilename());
+            System.out.println("Now playing: " + shuffledTracks.get(shufflePosition).getArtist() + " - " + shuffledTracks.get(shufflePosition).getTitle());
+            shufflePosition ++; 
+        }
+    }
+
 }
